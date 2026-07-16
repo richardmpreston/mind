@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mind">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Mind</title>
+<style>
+:root { --bg:#f5f4f0; --card:#fff; --text:#1c1b18; --muted:#7a7770; --chip:#eceae4; --accent:#b05c3b; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#161513; --card:#211f1c; --text:#eae8e3; --muted:#94908a; --chip:#2e2b27; --accent:#d98a63; }
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.5 -apple-system, system-ui, sans-serif; padding: 24px 16px 48px; }
+header { max-width: 1100px; margin: 0 auto 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+h1 { font-size: 22px; margin-right: auto; }
+input { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--chip); background: var(--card); color: var(--text); font-size: 16px; font-family: inherit; }
+#q { flex: 1 1 240px; max-width: 420px; }
+button { font-family: inherit; }
+#out { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+#out:hover { color: var(--accent); }
+#cats { max-width: 1100px; margin: 0 auto 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+.cat { padding: 4px 12px; border-radius: 999px; background: var(--chip); border: none; color: var(--text); font-size: 13px; cursor: pointer; }
+.cat.on { background: var(--accent); color: #fff; }
+#grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.card { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+.card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
+.card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.card h2 { font-size: 15px; line-height: 1.35; }
+.card h2 a { color: var(--text); text-decoration: none; }
+.card h2 a:hover { color: var(--accent); }
+.card p { font-size: 13px; color: var(--muted); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); border: none; cursor: pointer; }
+.tag:hover { color: var(--accent); }
+.meta { font-size: 11px; color: var(--muted); margin-top: auto; }
+#status { max-width: 1100px; margin: 40px auto; text-align: center; color: var(--muted); }
+#login { max-width: 320px; margin: 15vh auto; text-align: center; display: flex; flex-direction: column; gap: 12px; }
+#login h1 { margin: 0 0 4px; }
+#login button { padding: 10px 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 15px; cursor: pointer; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="login" hidden>
+  <h1>Mind</h1>
+  <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+  <button id="send">Email me a login link</button>
+  <div id="loginmsg" style="font-size:13px;color:var(--muted)"></div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>Mind</h1>
+    <input id="q" type="search" placeholder="Search…" autocomplete="off">
+    <button id="out">Sign out</button>
+  </header>
+  <div id="cats"></div>
+  <div id="grid"></div>
+  <div id="status">Loading…</div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPA = "https://bxfyqkqwyyqfxsibywtg.supabase.co";
+const ANON = "sb_publishable_C-uSePz4I4bLL74bqq375A_KGNpNJP4";
+const supa = createClient(SUPA, ANON);
+const $ = (id) => document.getElementById(id);
+let cat = null, t;
+
+function esc(s) { const d = document.createElement("span"); d.textContent = s ?? ""; return d.innerHTML; }
+
+async function load() {
+  const q = $("q").value.trim();
+  let sel = supa.from("items")
+    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path")
+    .order("created_at", { ascending: false }).limit(200);
+  if (q) sel = sel.textSearch("search", q, { type: "websearch" });
+  if (cat) sel = sel.eq("category", cat);
+  const { data, error } = await sel;
+  if (error) { $("status").hidden = false; $("status").textContent = "Couldn't load: " + error.message; return; }
+  render(data);
+  $("status").textContent = data.length ? "" : "Nothing found.";
+  $("status").hidden = data.length > 0;
+}
+
+function render(items) {
+  $("grid").innerHTML = items.map(i => {
+    const img = i.storage_path
+      ? '<img loading="lazy" src="' + SUPA + '/storage/v1/object/public/mind/' + esc(i.storage_path) + '">'
+      : "";
+    const title = i.source_url
+      ? '<a href="' + esc(i.source_url) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
+      : esc(i.title);
+    const tags = (i.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
+    const when = new Date(i.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    return '<div class="card">' + img + '<div class="body"><h2>' + title + "</h2>" +
+      (i.summary ? "<p>" + esc(i.summary) + "</p>" : "") +
+      '<div class="tags">' + tags + '</div><div class="meta">' + esc(i.category || i.kind) + " · " + when + "</div></div></div>";
+  }).join("");
+  document.querySelectorAll(".tag").forEach(b => b.onclick = () => { $("q").value = b.dataset.t; load(); });
+}
+
+async function loadCats() {
+  const { data } = await supa.from("items").select("category").limit(1000);
+  const cats = [...new Set((data || []).map(r => r.category).filter(Boolean))].sort();
+  $("cats").innerHTML = cats.map(c => '<button class="cat" data-c="' + esc(c) + '">' + esc(c) + "</button>").join("");
+  document.querySelectorAll(".cat").forEach(b => b.onclick = () => {
+    cat = cat === b.dataset.c ? null : b.dataset.c;
+    document.querySelectorAll(".cat").forEach(x => x.classList.toggle("on", x.dataset.c === cat));
+    load();
+  });
+}
+
+$("send").onclick = async () => {
+  const email = $("email").value.trim();
+  if (!email) return;
+  $("loginmsg").textContent = "Sending…";
+  const { error } = await supa.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split("#")[0] } });
+  $("loginmsg").textContent = error ? error.message : "Check your email for the link.";
+};
+$("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("send").click(); });
+$("out").onclick = async () => { await supa.auth.signOut(); location.reload(); };
+$("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 250); });
+
+supa.auth.onAuthStateChange((_e, session) => {
+  const in_ = !!session;
+  $("app").hidden = !in_;
+  $("login").hidden = in_;
+  if (in_) { loadCats(); load(); }
+});
+</script>
+</body>
+</html>
