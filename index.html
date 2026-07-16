@@ -6,61 +6,105 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mind">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
 <title>Mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root { --bg:#f5f4f0; --card:#fff; --text:#1c1b18; --muted:#7a7770; --chip:#eceae4; --accent:#b05c3b; }
+:root {
+  --bg:#fff; --text:#111113; --body:#4a4a50; --muted:#6b6b70; --faint:#e6e6e8; --accent:#2b3ce0;
+  --serif:"Fraunces",Georgia,serif;
+  --sans:-apple-system,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
 @media (prefers-color-scheme: dark) {
-  :root { --bg:#161513; --card:#211f1c; --text:#eae8e3; --muted:#94908a; --chip:#2e2b27; --accent:#d98a63; }
+  :root { --bg:#0e0e10; --text:#f0f0f2; --body:#a8a8b0; --muted:#8f8f98; --faint:#2a2a2e; --accent:#8f9cff; }
 }
 * { box-sizing: border-box; margin: 0; }
-body { background: var(--bg); color: var(--text); font: 16px/1.5 -apple-system, system-ui, sans-serif; padding: 24px 16px 48px; }
-header { max-width: 1100px; margin: 0 auto 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-h1 { font-size: 22px; margin-right: auto; }
-input { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--chip); background: var(--card); color: var(--text); font-size: 16px; font-family: inherit; }
-#q { flex: 1 1 240px; max-width: 420px; }
-button { font-family: inherit; }
-#out { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5; padding: 28px 20px 64px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+
+/* header */
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
+.count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+#out { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
+  background: none; border: none; cursor: pointer; min-height: 44px; padding: 0 0 0 14px; }
 #out:hover { color: var(--accent); }
-#cats { max-width: 1100px; margin: 0 auto 20px; display: flex; gap: 8px; flex-wrap: wrap; }
-.cat { padding: 4px 12px; border-radius: 999px; background: var(--chip); border: none; color: var(--text); font-size: 13px; cursor: pointer; }
-.cat.on { background: var(--accent); color: #fff; }
-#grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-.card { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); display: flex; flex-direction: column; }
-.card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
-.card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.card h2 { font-size: 15px; line-height: 1.35; }
+
+/* search: the primary act, so it gets the weight */
+.searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 9px; margin-bottom: 20px; }
+.searchbar svg { flex: none; }
+#q { flex: 1; font-family: var(--serif); font-size: 20px; color: var(--text); background: none; border: none; padding: 6px 0; min-height: 38px; }
+#q::placeholder { color: var(--muted); opacity: 1; }
+#q:focus { outline: none; }
+.searchbar:focus-within { border-bottom-color: var(--accent); }
+
+/* category filters */
+#cats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
+.cat { font-family: var(--mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  min-height: 44px; padding: 0; border-bottom: 2px solid transparent; }
+.cat:hover { color: var(--text); }
+.cat.on { color: var(--text); border-bottom-color: var(--accent); }
+
+/* masonry, no card chrome */
+#grid { column-width: 300px; column-gap: 28px; }
+.card { break-inside: avoid; margin: 0 0 30px; }
+.card img { width: 100%; height: auto; display: block; margin-bottom: 10px; background: var(--faint); }
+.card h2 { font-family: var(--serif); font-size: 19px; font-weight: 400; line-height: 1.3; margin-bottom: 7px; }
 .card h2 a { color: var(--text); text-decoration: none; }
 .card h2 a:hover { color: var(--accent); }
-.card p { font-size: 13px; color: var(--muted); }
-.tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); border: none; cursor: pointer; }
+.card p { font-size: 14px; line-height: 1.55; color: var(--body); margin-bottom: 6px; }
+.tags { display: flex; flex-wrap: wrap; }
+/* ponytail: 36px targets, over the 24px WCAG AA floor. Full 44px would double
+   the height of a 7-tag card for a control you hit far less often than a link. */
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  min-height: 36px; display: inline-flex; align-items: center; padding: 0 14px 0 0; }
 .tag:hover { color: var(--accent); }
-.meta { font-size: 11px; color: var(--muted); margin-top: auto; }
-#status { max-width: 1100px; margin: 40px auto; text-align: center; color: var(--muted); }
-#login { max-width: 320px; margin: 15vh auto; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-#login h1 { margin: 0 0 4px; }
-#login button { padding: 10px 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 15px; cursor: pointer; }
+.meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.meta .src { color: var(--accent); }
+#status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 40px 0; }
+
+/* login */
+#login { max-width: 340px; margin: 18vh auto; }
+#login .logo { font-size: 30px; display: block; margin-bottom: 18px; }
+#email { width: 100%; font-family: var(--sans); font-size: 16px; color: var(--text); background: none;
+  border: none; border-bottom: 1.5px solid var(--text); padding: 10px 0; min-height: 44px; }
+#email:focus { outline: none; border-bottom-color: var(--accent); }
+#send { width: 100%; margin-top: 16px; min-height: 48px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--bg); background: var(--text);
+  border: none; cursor: pointer; }
+#send:hover { background: var(--accent); }
+#loginmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); margin-top: 14px; min-height: 16px; }
 [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 
 <div id="login" hidden>
-  <h1>Mind</h1>
-  <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+  <span class="logo">Mind</span>
+  <input id="email" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Email address">
   <button id="send">Email me a login link</button>
-  <div id="loginmsg" style="font-size:13px;color:var(--muted)"></div>
+  <div id="loginmsg"></div>
 </div>
 
-<div id="app" hidden>
-  <header>
-    <h1>Mind</h1>
-    <input id="q" type="search" placeholder="Search…" autocomplete="off">
+<div id="app" class="wrap" hidden>
+  <div class="top">
+    <span class="logo">Mind</span>
+    <span class="count" id="count"></span>
     <button id="out">Sign out</button>
-  </header>
+  </div>
+  <div class="searchbar">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
+    <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
+  </div>
   <div id="cats"></div>
   <div id="grid"></div>
-  <div id="status">Loading…</div>
+  <div id="status">Loading</div>
 </div>
 
 <script type="module">
@@ -82,30 +126,35 @@ async function load() {
   if (q) sel = sel.textSearch("search", q, { type: "websearch" });
   if (cat) sel = sel.eq("category", cat);
   const { data, error } = await sel;
-  if (error) { $("status").hidden = false; $("status").textContent = "Couldn't load: " + error.message; return; }
+  if (error) { $("status").hidden = false; $("status").textContent = "Couldn't load — " + error.message; return; }
   render(data);
-  $("status").textContent = data.length ? "" : "Nothing found.";
+  $("status").textContent = "Nothing found";
   $("status").hidden = data.length > 0;
 }
 
 function render(items) {
   $("grid").innerHTML = items.map(i => {
     const img = i.storage_path
-      ? '<img loading="lazy" src="' + SUPA + '/storage/v1/object/public/mind/' + esc(i.storage_path) + '">'
+      ? '<img loading="lazy" alt="" src="' + SUPA + '/storage/v1/object/public/mind/' + esc(i.storage_path) + '">'
       : "";
     const title = i.source_url
       ? '<a href="' + esc(i.source_url) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
       : esc(i.title);
     const tags = (i.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
-    const when = new Date(i.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-    return '<div class="card">' + img + '<div class="body"><h2>' + title + "</h2>" +
+    const when = new Date(i.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    let host = "";
+    try { if (i.source_url) host = ' <span class="src">↗ ' + esc(new URL(i.source_url).hostname.replace(/^www\./, "")) + "</span>"; } catch {}
+    return '<div class="card">' + img + "<h2>" + title + "</h2>" +
       (i.summary ? "<p>" + esc(i.summary) + "</p>" : "") +
-      '<div class="tags">' + tags + '</div><div class="meta">' + esc(i.category || i.kind) + " · " + when + "</div></div></div>";
+      '<div class="tags">' + tags + '</div>' +
+      '<div class="meta">' + when + host + "</div></div>";
   }).join("");
   document.querySelectorAll(".tag").forEach(b => b.onclick = () => { $("q").value = b.dataset.t; load(); });
 }
 
-async function loadCats() {
+async function loadChrome() {
+  const { count } = await supa.from("items").select("*", { count: "exact", head: true });
+  $("count").textContent = count === 1 ? "1 saved" : count + " saved";
   const { data } = await supa.from("items").select("category").limit(1000);
   const cats = [...new Set((data || []).map(r => r.category).filter(Boolean))].sort();
   $("cats").innerHTML = cats.map(c => '<button class="cat" data-c="' + esc(c) + '">' + esc(c) + "</button>").join("");
@@ -131,7 +180,7 @@ supa.auth.onAuthStateChange((_e, session) => {
   const in_ = !!session;
   $("app").hidden = !in_;
   $("login").hidden = in_;
-  if (in_) { loadCats(); load(); }
+  if (in_) { loadChrome(); load(); }
 });
 </script>
 </body>
