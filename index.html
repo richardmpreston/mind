@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mind">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,14 +25,16 @@
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5; padding: 28px 20px 64px; }
 .wrap { max-width: 1080px; margin: 0 auto; }
+[hidden] { display: none !important; }
 
-/* header */
 .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
 .logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
-.right { display: flex; align-items: center; gap: 12px; }
-.count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+.right { display: flex; align-items: center; gap: 8px; }
+.count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+#new { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text); cursor: pointer; padding: 0; }
+#new:hover { color: var(--accent); }
 
-/* account menu: the initial echoes the wordmark; 26px mark inside a 44px target */
 #acct { position: relative; }
 #avatar { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
   background: none; border: none; padding: 0; cursor: pointer; }
@@ -47,16 +49,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   padding: 0 16px; text-align: left; }
 #menu button:hover { color: var(--accent); }
 
-/* search: the primary act, so it gets the weight */
 .searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 9px; margin-bottom: 20px; }
-.searchbar svg { flex: none; }
 #q { flex: 1; font-family: var(--serif); font-size: 20px; color: var(--text); background: none; border: none; padding: 6px 0; min-height: 38px; }
 #q::placeholder { color: var(--muted); opacity: 1; }
 #q:focus { outline: none; }
 .searchbar:focus-within { border-bottom-color: var(--accent); }
 
-/* set-password form: a real password field, so the keychain offers to
-   generate and save one — a prompt() can't do either */
 #pwform { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
   padding-bottom: 20px; border-bottom: 1px solid var(--faint); }
 #pwuser, #newpw { font-family: var(--sans); font-size: 15px; color: var(--text); background: none;
@@ -70,7 +68,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #cancelpw { color: var(--muted); background: none; padding: 0 4px; }
 #pwmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); }
 
-/* category filters */
 #cats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
 .cat { font-family: var(--mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
   background: none; border: none; color: var(--muted); cursor: pointer;
@@ -78,9 +75,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .cat:hover { color: var(--text); }
 .cat.on { color: var(--text); border-bottom-color: var(--accent); }
 
-/* masonry, no card chrome */
 #grid { column-width: 300px; column-gap: 28px; }
-.card { break-inside: avoid; margin: 0 0 30px; }
+.card { break-inside: avoid; margin: 0 0 30px; cursor: pointer; }
 .card img { width: 100%; height: auto; display: block; margin-bottom: 10px; background: var(--faint); }
 .card h2 { font-family: var(--serif); font-size: 19px; font-weight: 400; line-height: 1.3; margin-bottom: 7px; }
 .card h2 a { color: var(--text); text-decoration: none; }
@@ -95,9 +91,58 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .tag:hover { color: var(--accent); }
 .meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
 .meta .src { color: var(--accent); }
+.pen { color: var(--muted); }
 #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 40px 0; }
 
-/* login */
+/* detail */
+#detail { max-width: 680px; }
+#back { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); background: none; border: none; cursor: pointer; min-height: 44px; padding: 0; margin-bottom: 12px; }
+#back:hover { color: var(--accent); }
+#dimg { width: 100%; height: auto; display: block; margin-bottom: 16px; background: var(--faint); }
+#dtitle { font-family: var(--serif); font-size: 28px; font-weight: 400; line-height: 1.25; margin-bottom: 8px; }
+#dtitle a { color: var(--text); text-decoration: none; }
+#dtitle a:hover { color: var(--accent); }
+#dmeta { margin-bottom: 18px; }
+#dsummary { font-size: 15px; line-height: 1.6; color: var(--body); margin-bottom: 18px; }
+#dtags { margin-bottom: 24px; }
+#elabel { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding-top: 20px; border-top: 1px solid var(--faint); margin-bottom: 8px; }
+/* sticky, not fixed: a fixed toolbar and the iOS keyboard fight over the
+   viewport and the toolbar loses. Sticky needs no visualViewport maths. */
+#toolbar { position: sticky; top: 0; z-index: 5; background: var(--bg); display: flex; gap: 4px;
+  padding: 6px 0; border-bottom: 1px solid var(--faint); margin-bottom: 12px; }
+#toolbar button { width: 44px; height: 44px; background: none; border: none; color: var(--text);
+  cursor: pointer; font-size: 16px; }
+#toolbar button:hover { color: var(--accent); }
+#toolbar .b { font-family: var(--serif); font-weight: 500; }
+#toolbar .i { font-family: var(--serif); font-style: italic; }
+#toolbar .quo { font-family: var(--serif); font-size: 22px; }
+#editor { min-height: 180px; font-size: 16px; line-height: 1.65; color: var(--text); outline: none; padding-bottom: 12px; }
+#editor:empty:before { content: attr(data-placeholder); color: var(--muted); }
+#editor blockquote { margin: 12px 0; padding-left: 16px; border-left: 2px solid var(--faint);
+  font-family: var(--serif); font-size: 17px; color: var(--body); }
+#editor img { max-width: 100%; height: auto; display: block; margin: 12px 0; }
+#editor a { color: var(--accent); }
+#editor p { margin: 0 0 10px; }
+.editrow { display: flex; align-items: center; gap: 14px; margin-top: 16px;
+  padding-top: 16px; border-top: 1px solid var(--faint); }
+#save { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--bg); background: var(--text); border: none; cursor: pointer; min-height: 44px; padding: 0 20px; }
+#save:hover { background: var(--accent); }
+#savemsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); flex: 1; }
+#del { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); background: none; border: none; cursor: pointer; min-height: 44px; padding: 0; }
+#del:hover { color: var(--accent); }
+
+#toast { position: fixed; left: 20px; bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 20; display: flex; align-items: center; gap: 16px; background: var(--text); color: var(--bg);
+  padding: 0 8px 0 18px; min-height: 48px; }
+#toast span { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+#undo { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--bg); background: none; border: none; cursor: pointer; min-height: 44px; padding: 0 12px;
+  text-decoration: underline; }
+
 #login { max-width: 340px; margin: 18vh auto; }
 #login .logo { font-size: 30px; display: block; margin-bottom: 18px; }
 #email, #pw { width: 100%; font-family: var(--sans); font-size: 16px; color: var(--text); background: none;
@@ -113,7 +158,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   border: none; cursor: pointer; }
 #send:hover { color: var(--accent); }
 #loginmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); margin-top: 14px; min-height: 16px; }
-[hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -132,6 +176,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
     <span class="logo">Mind</span>
     <span class="right">
       <span class="count" id="count"></span>
+      <button id="new" aria-label="New note" title="New note">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
       <span id="acct">
         <button id="avatar" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span id="initial"></span></button>
         <span id="menu" role="menu" hidden>
@@ -141,37 +188,75 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
       </span>
     </span>
   </div>
-  <div class="searchbar">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
-    <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
+
+  <div id="gridview">
+    <div class="searchbar">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
+      <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
+    </div>
+    <form id="pwform" hidden>
+      <input id="pwuser" type="email" autocomplete="username" readonly aria-label="Account email">
+      <input id="newpw" type="password" autocomplete="new-password" placeholder="New password" aria-label="New password">
+      <button id="savepw" type="submit">Save</button>
+      <button id="cancelpw" type="button">Cancel</button>
+      <span id="pwmsg"></span>
+    </form>
+    <div id="cats"></div>
+    <div id="grid"></div>
+    <div id="status">Loading</div>
   </div>
-  <form id="pwform" hidden>
-    <input id="pwuser" type="email" autocomplete="username" readonly aria-label="Account email">
-    <input id="newpw" type="password" autocomplete="new-password" placeholder="New password" aria-label="New password">
-    <button id="savepw" type="submit">Save</button>
-    <button id="cancelpw" type="button">Cancel</button>
-    <span id="pwmsg"></span>
-  </form>
-  <div id="cats"></div>
-  <div id="grid"></div>
-  <div id="status">Loading</div>
+
+  <div id="detail" hidden>
+    <button id="back">← All</button>
+    <img id="dimg" alt="" hidden>
+    <h1 id="dtitle"></h1>
+    <div id="dmeta" class="meta"></div>
+    <p id="dsummary"></p>
+    <div id="dtags" class="tags"></div>
+    <div id="elabel"></div>
+    <div id="toolbar">
+      <button class="b" data-cmd="bold" aria-label="Bold">B</button>
+      <button class="i" data-cmd="italic" aria-label="Italic">I</button>
+      <button class="quo" data-cmd="quote" aria-label="Quote">”</button>
+    </div>
+    <div id="editor" contenteditable="true" data-placeholder="Write…"
+         autocapitalize="sentences" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Note body"></div>
+    <div class="editrow">
+      <button id="save">Save</button>
+      <span id="savemsg"></span>
+      <button id="del">Delete</button>
+    </div>
+  </div>
 </div>
+
+<div id="toast" hidden><span id="toastmsg"></span><button id="undo">Undo</button></div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import DOMPurify from "https://esm.sh/dompurify@3";
 
 const SUPA = "https://bxfyqkqwyyqfxsibywtg.supabase.co";
 const ANON = "sb_publishable_C-uSePz4I4bLL74bqq375A_KGNpNJP4";
+const FN = SUPA + "/functions/v1/mind";
 const supa = createClient(SUPA, ANON);
 const $ = (id) => document.getElementById(id);
-let cat = null, t;
+let cat = null, t, current = null;
 
-function esc(s) { const d = document.createElement("span"); d.textContent = s ?? ""; return d.innerHTML; }
+const esc = (s) => { const d = document.createElement("span"); d.textContent = s ?? ""; return d.innerHTML; };
+const clean = (html) => DOMPurify.sanitize(html, {
+  ALLOWED_TAGS: ["b","strong","i","em","blockquote","p","br","a","img","ul","ol","li","div","span"],
+  ALLOWED_ATTR: ["href","src","alt","target","rel"],
+});
+const when = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+
+/* ---------- grid ---------- */
 
 async function load() {
   const q = $("q").value.trim();
   let sel = supa.from("items")
-    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path")
+    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path,body_text")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false }).limit(200);
   if (q) sel = sel.textSearch("search", q, { type: "websearch" });
   if (cat) sel = sel.eq("category", cat);
@@ -190,17 +275,178 @@ function render(items) {
     const title = i.source_url
       ? '<a href="' + esc(i.source_url) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
       : esc(i.title);
+    // a note shows what you wrote; a link shows what Claude made of it
+    const blurb = i.kind === "note" ? (i.body_text || i.summary) : i.summary;
     const tags = (i.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
-    const when = new Date(i.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    let host = "";
-    try { if (i.source_url) host = ' <span class="src">↗ ' + esc(new URL(i.source_url).hostname.replace(/^www\./, "")) + "</span>"; } catch {}
-    return '<div class="card">' + img + "<h2>" + title + "</h2>" +
-      (i.summary ? "<p>" + esc(i.summary) + "</p>" : "") +
+    const src = i.source_url ? ' <span class="src">↗ ' + esc(host(i.source_url)) + "</span>" : "";
+    const pen = i.kind !== "note" && i.body_text ? ' <span class="pen">· annotated</span>' : "";
+    return '<div class="card" data-id="' + i.id + '">' + img + "<h2>" + title + "</h2>" +
+      (blurb ? "<p>" + esc(blurb.slice(0, 220)) + (blurb.length > 220 ? "…" : "") + "</p>" : "") +
       '<div class="tags">' + tags + '</div>' +
-      '<div class="meta">' + when + host + "</div></div>";
+      '<div class="meta">' + when(i.created_at) + src + pen + "</div></div>";
   }).join("");
-  document.querySelectorAll(".tag").forEach(b => b.onclick = () => { $("q").value = b.dataset.t; load(); });
+  document.querySelectorAll(".tag").forEach(b => b.onclick = (e) => {
+    e.stopPropagation(); $("q").value = b.dataset.t; load();
+  });
+  document.querySelectorAll(".card").forEach(c => c.onclick = (e) => {
+    if (e.target.closest("a")) return;   // link titles still open the source
+    location.hash = c.dataset.id;
+  });
 }
+
+async function loadChrome() {
+  const { data: u } = await supa.auth.getUser();
+  $("initial").textContent = ((u?.user?.email || "?")[0]).toUpperCase();
+  const { count } = await supa.from("items").select("*", { count: "exact", head: true }).is("deleted_at", null);
+  $("count").textContent = count === 1 ? "1 saved" : count + " saved";
+  const { data } = await supa.from("items").select("category").is("deleted_at", null).limit(1000);
+  const cats = [...new Set((data || []).map(r => r.category).filter(Boolean))].sort();
+  $("cats").innerHTML = cats.map(c => '<button class="cat" data-c="' + esc(c) + '">' + esc(c) + "</button>").join("");
+  document.querySelectorAll(".cat").forEach(b => b.onclick = () => {
+    cat = cat === b.dataset.c ? null : b.dataset.c;
+    document.querySelectorAll(".cat").forEach(x => x.classList.toggle("on", x.dataset.c === cat));
+    load();
+  });
+}
+
+/* ---------- detail ---------- */
+
+async function showDetail(id) {
+  $("gridview").hidden = true; $("detail").hidden = false; $("savemsg").textContent = "";
+  if (!id) {
+    current = { id: null, kind: "note" };
+    $("dtitle").textContent = "New note";
+    $("dimg").hidden = true; $("dsummary").hidden = true; $("dtags").innerHTML = "";
+    $("dmeta").textContent = ""; $("elabel").hidden = true; $("del").hidden = true;
+    $("editor").innerHTML = "";
+    $("editor").focus();
+    return;
+  }
+  const { data, error } = await supa.from("items").select("*").eq("id", id).single();
+  if (error || !data) { $("dtitle").textContent = "Not found"; return; }
+  current = data;
+  $("dtitle").innerHTML = data.source_url
+    ? '<a href="' + esc(data.source_url) + '" target="_blank" rel="noopener">' + esc(data.title) + "</a>"
+    : esc(data.title);
+  $("dmeta").innerHTML = esc(data.category || data.kind) + " · " + when(data.created_at) +
+    (data.source_url ? ' <span class="src">↗ ' + esc(host(data.source_url)) + "</span>" : "");
+  if (data.storage_path) { $("dimg").src = SUPA + "/storage/v1/object/public/mind/" + data.storage_path; $("dimg").hidden = false; }
+  else $("dimg").hidden = true;
+  // a note's own body is the editor's job; only show Claude's summary for things it read
+  const showSummary = data.kind !== "note" && data.summary;
+  $("dsummary").hidden = !showSummary;
+  $("dsummary").textContent = data.summary || "";
+  $("dtags").innerHTML = (data.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
+  document.querySelectorAll("#dtags .tag").forEach(b => b.onclick = () => { location.hash = ""; $("q").value = b.dataset.t; load(); });
+  $("elabel").hidden = data.kind === "note";
+  $("elabel").textContent = "Your notes";
+  $("del").hidden = false;
+  $("editor").innerHTML = clean(data.body_html || "");
+}
+
+function showGrid() {
+  $("detail").hidden = true; $("gridview").hidden = false;
+  current = null;
+  loadChrome(); load();
+}
+
+function route() {
+  const h = location.hash.slice(1);
+  if (!h) showGrid();
+  else if (h === "new") showDetail(null);
+  else showDetail(h);
+}
+window.addEventListener("hashchange", route);
+
+/* ---------- editing ---------- */
+
+// tags over inline styles, so the saved markup stays small and sanitisable
+document.execCommand("styleWithCSS", false, false);
+
+document.querySelectorAll("#toolbar button").forEach(b => {
+  // the critical bit: without this the editor blurs on tap, the selection
+  // collapses, and the command applies to nothing
+  b.addEventListener("pointerdown", (e) => e.preventDefault());
+  b.onclick = () => {
+    const c = b.dataset.cmd;
+    if (c === "quote") document.execCommand("formatBlock", false, "blockquote");
+    else document.execCommand(c, false);
+    $("editor").focus();
+  };
+});
+
+$("editor").addEventListener("paste", async (e) => {
+  const items = [...(e.clipboardData?.items || [])];
+  const image = items.find(i => i.type.startsWith("image/"));
+  if (image) {
+    e.preventDefault();
+    const file = image.getAsFile();
+    if (!file) return;
+    $("savemsg").textContent = "Uploading image…";
+    const path = crypto.randomUUID() + "." + (file.type.split("/")[1] || "png");
+    const { error } = await supa.storage.from("mind").upload(path, file, { contentType: file.type });
+    if (error) { $("savemsg").textContent = "Image upload failed — " + error.message; return; }
+    $("savemsg").textContent = "";
+    // insertHTML (not DOM surgery) so the image lands on the native undo stack
+    document.execCommand("insertHTML", false,
+      '<img src="' + SUPA + "/storage/v1/object/public/mind/" + path + '">');
+    return;
+  }
+  const html = e.clipboardData?.getData("text/html");
+  if (html) { e.preventDefault(); document.execCommand("insertHTML", false, clean(html)); }
+  // plain text falls through to the browser's own handling
+});
+
+$("save").onclick = async () => {
+  const body_html = clean($("editor").innerHTML);
+  const body_text = $("editor").innerText.trim();
+  $("savemsg").textContent = "Saving…";
+  if (current?.id) {
+    const patch = { body_html, body_text };
+    // for a note the body IS the source text, so keep raw_text in step; for a
+    // link raw_text holds the fetched page and must not be clobbered
+    if (current.kind === "note") patch.raw_text = body_text;
+    const { error } = await supa.from("items").update(patch).eq("id", current.id);
+    $("savemsg").textContent = error ? "Couldn't save — " + error.message : "Saved";
+  } else {
+    if (!body_text) { $("savemsg").textContent = "Nothing to save"; return; }
+    const { data: s } = await supa.auth.getSession();
+    const r = await fetch(FN, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer " + s.session.access_token },
+      body: JSON.stringify({ text: body_text, body_html }),
+    });
+    if (!r.ok) { $("savemsg").textContent = "Couldn't save — " + await r.text(); return; }
+    const row = await r.json();
+    location.hash = row.id;   // reopens it, now carrying Claude's title and tags
+  }
+};
+
+$("del").onclick = async () => {
+  const id = current?.id;
+  if (!id) return;
+  const { error } = await supa.from("items").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  if (error) { $("savemsg").textContent = "Couldn't delete — " + error.message; return; }
+  location.hash = "";
+  toast("Deleted", async () => {
+    await supa.from("items").update({ deleted_at: null }).eq("id", id);
+    showGrid();
+  });
+};
+
+let toastT;
+function toast(msg, onUndo) {
+  $("toastmsg").textContent = msg;
+  $("toast").hidden = false;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { $("toast").hidden = true; }, 6000);
+  $("undo").onclick = async () => { $("toast").hidden = true; clearTimeout(toastT); await onUndo(); };
+}
+
+$("new").onclick = () => { location.hash = "new"; };
+$("back").onclick = () => { location.hash = ""; };
+
+/* ---------- account ---------- */
 
 const closeMenu = () => { $("menu").hidden = true; $("avatar").setAttribute("aria-expanded", "false"); };
 $("avatar").onclick = () => {
@@ -210,22 +456,6 @@ $("avatar").onclick = () => {
 };
 document.addEventListener("click", (e) => { if (!$("acct").contains(e.target)) closeMenu(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
-
-async function loadChrome() {
-  const { data: u } = await supa.auth.getUser();
-  const email = u?.user?.email ?? "";
-  $("initial").textContent = (email[0] || "?").toUpperCase();
-  const { count } = await supa.from("items").select("*", { count: "exact", head: true });
-  $("count").textContent = count === 1 ? "1 saved" : count + " saved";
-  const { data } = await supa.from("items").select("category").limit(1000);
-  const cats = [...new Set((data || []).map(r => r.category).filter(Boolean))].sort();
-  $("cats").innerHTML = cats.map(c => '<button class="cat" data-c="' + esc(c) + '">' + esc(c) + "</button>").join("");
-  document.querySelectorAll(".cat").forEach(b => b.onclick = () => {
-    cat = cat === b.dataset.c ? null : b.dataset.c;
-    document.querySelectorAll(".cat").forEach(x => x.classList.toggle("on", x.dataset.c === cat));
-    load();
-  });
-}
 
 $("signin").onclick = async () => {
   const email = $("email").value.trim(), password = $("pw").value;
@@ -268,17 +498,17 @@ $("pwform").onsubmit = async (e) => {
   $("newpw").value = "";
   setTimeout(() => { $("pwform").hidden = true; }, 2500);
 };
+$("out").onclick = async () => { await supa.auth.signOut(); location.reload(); };
 
 $("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pw").focus(); });
 $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("signin").click(); });
-$("out").onclick = async () => { await supa.auth.signOut(); location.reload(); };
 $("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 250); });
 
 supa.auth.onAuthStateChange((_e, session) => {
   const in_ = !!session;
   $("app").hidden = !in_;
   $("login").hidden = in_;
-  if (in_) { loadChrome(); load(); }
+  if (in_) route();
 });
 </script>
 </body>
