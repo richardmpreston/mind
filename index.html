@@ -42,6 +42,21 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #q:focus { outline: none; }
 .searchbar:focus-within { border-bottom-color: var(--accent); }
 
+/* set-password form: a real password field, so the keychain offers to
+   generate and save one — a prompt() can't do either */
+#pwform { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+  padding-bottom: 20px; border-bottom: 1px solid var(--faint); }
+#pwuser, #newpw { font-family: var(--sans); font-size: 15px; color: var(--text); background: none;
+  border: none; border-bottom: 1.5px solid var(--faint); padding: 8px 0; min-height: 44px; flex: 1 1 180px; }
+#pwuser { color: var(--muted); }
+#newpw:focus { outline: none; border-bottom-color: var(--accent); }
+#savepw, #cancelpw { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; min-height: 44px; padding: 0 16px; border: none; cursor: pointer; }
+#savepw { color: var(--bg); background: var(--text); }
+#savepw:hover { background: var(--accent); }
+#cancelpw { color: var(--muted); background: none; padding: 0 4px; }
+#pwmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); }
+
 /* category filters */
 #cats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
 .cat { font-family: var(--mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
@@ -110,6 +125,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
     <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
   </div>
+  <form id="pwform" hidden>
+    <input id="pwuser" type="email" autocomplete="username" readonly aria-label="Account email">
+    <input id="newpw" type="password" autocomplete="new-password" placeholder="New password" aria-label="New password">
+    <button id="savepw" type="submit">Save</button>
+    <button id="cancelpw" type="button">Cancel</button>
+    <span id="pwmsg"></span>
+  </form>
   <div id="cats"></div>
   <div id="grid"></div>
   <div id="status">Loading</div>
@@ -192,12 +214,26 @@ $("send").onclick = async () => {
   $("loginmsg").textContent = error ? error.message : "Check your email — open the link in Safari, not the Home Screen app.";
 };
 
-// ponytail: prompt() — a once-per-lifetime action doesn't need its own form
 $("setpw").onclick = async () => {
-  const p = prompt("Choose a password (at least 8 characters). Save it to your keychain — you'll use it to sign in on your phone.");
-  if (!p) return;
-  const { error } = await supa.auth.updateUser({ password: p });
-  alert(error ? error.message : "Password set. Use it with your email to sign in on the Home Screen app.");
+  // the readonly username field is what lets the keychain file the password
+  // against the right account, and makes Safari offer to generate one
+  const { data } = await supa.auth.getUser();
+  $("pwuser").value = data?.user?.email ?? "";
+  $("pwform").hidden = false;
+  $("pwmsg").textContent = "";
+  $("newpw").focus();
+};
+$("cancelpw").onclick = () => { $("pwform").hidden = true; $("newpw").value = ""; };
+$("pwform").onsubmit = async (e) => {
+  e.preventDefault();
+  const password = $("newpw").value;
+  if (password.length < 8) { $("pwmsg").textContent = "At least 8 characters"; return; }
+  $("pwmsg").textContent = "Saving…";
+  const { error } = await supa.auth.updateUser({ password });
+  if (error) { $("pwmsg").textContent = error.message; return; }
+  $("pwmsg").textContent = "Saved — use it on your phone";
+  $("newpw").value = "";
+  setTimeout(() => { $("pwform").hidden = true; }, 2500);
 };
 
 $("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pw").focus(); });
