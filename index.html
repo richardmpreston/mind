@@ -31,9 +31,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
 .right { display: flex; align-items: center; gap: 8px; }
 .count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
-#new { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-  background: none; border: none; color: var(--text); cursor: pointer; padding: 0; }
-#new:hover { color: var(--accent); }
+/* floating create button: bottom-right thumb zone, clear of the status-bar
+   clutter that swallowed it in the header */
+#new { position: fixed; right: 20px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 15;
+  width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--text); color: var(--bg); border: none; cursor: pointer; padding: 0; }
+#new:hover { background: var(--accent); }
+#app:has(#detail:not([hidden])) #new { display: none; }
 
 #acct { position: relative; }
 #avatar { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
