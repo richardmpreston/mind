@@ -27,12 +27,25 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .wrap { max-width: 1080px; margin: 0 auto; }
 
 /* header */
-.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
 .logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
+.right { display: flex; align-items: center; gap: 12px; }
 .count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
-#out, #setpw { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
-  background: none; border: none; cursor: pointer; min-height: 44px; padding: 0 0 0 14px; }
-#out:hover, #setpw:hover { color: var(--accent); }
+
+/* account menu: the initial echoes the wordmark; 26px mark inside a 44px target */
+#acct { position: relative; }
+#avatar { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0; cursor: pointer; }
+#initial { width: 26px; height: 26px; border-radius: 50%; background: var(--text); color: var(--bg);
+  font-family: var(--serif); font-size: 13px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; }
+#avatar:hover #initial, #avatar[aria-expanded="true"] #initial { background: var(--accent); }
+#menu { position: absolute; top: 46px; right: 0; z-index: 10; min-width: 176px;
+  background: var(--bg); border: 1px solid var(--faint); display: flex; flex-direction: column; }
+#menu button { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text); background: none; border: none; cursor: pointer; min-height: 44px;
+  padding: 0 16px; text-align: left; }
+#menu button:hover { color: var(--accent); }
 
 /* search: the primary act, so it gets the weight */
 .searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 9px; margin-bottom: 20px; }
@@ -117,9 +130,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 <div id="app" class="wrap" hidden>
   <div class="top">
     <span class="logo">Mind</span>
-    <span class="count" id="count"></span>
-    <button id="setpw">Set password</button>
-    <button id="out">Sign out</button>
+    <span class="right">
+      <span class="count" id="count"></span>
+      <span id="acct">
+        <button id="avatar" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span id="initial"></span></button>
+        <span id="menu" role="menu" hidden>
+          <button id="setpw" role="menuitem">Set password</button>
+          <button id="out" role="menuitem">Sign out</button>
+        </span>
+      </span>
+    </span>
   </div>
   <div class="searchbar">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
@@ -182,7 +202,19 @@ function render(items) {
   document.querySelectorAll(".tag").forEach(b => b.onclick = () => { $("q").value = b.dataset.t; load(); });
 }
 
+const closeMenu = () => { $("menu").hidden = true; $("avatar").setAttribute("aria-expanded", "false"); };
+$("avatar").onclick = () => {
+  const open = $("menu").hidden;
+  $("menu").hidden = !open;
+  $("avatar").setAttribute("aria-expanded", String(open));
+};
+document.addEventListener("click", (e) => { if (!$("acct").contains(e.target)) closeMenu(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
 async function loadChrome() {
+  const { data: u } = await supa.auth.getUser();
+  const email = u?.user?.email ?? "";
+  $("initial").textContent = (email[0] || "?").toUpperCase();
   const { count } = await supa.from("items").select("*", { count: "exact", head: true });
   $("count").textContent = count === 1 ? "1 saved" : count + " saved";
   const { data } = await supa.from("items").select("category").limit(1000);
@@ -215,6 +247,7 @@ $("send").onclick = async () => {
 };
 
 $("setpw").onclick = async () => {
+  closeMenu();
   // the readonly username field is what lets the keychain file the password
   // against the right account, and makes Safari offer to generate one
   const { data } = await supa.auth.getUser();
