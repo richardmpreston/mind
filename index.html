@@ -30,9 +30,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
 .logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
 .count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
-#out { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
+#out, #setpw { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
   background: none; border: none; cursor: pointer; min-height: 44px; padding: 0 0 0 14px; }
-#out:hover { color: var(--accent); }
+#out:hover, #setpw:hover { color: var(--accent); }
 
 /* search: the primary act, so it gets the weight */
 .searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 9px; margin-bottom: 20px; }
@@ -72,13 +72,18 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 /* login */
 #login { max-width: 340px; margin: 18vh auto; }
 #login .logo { font-size: 30px; display: block; margin-bottom: 18px; }
-#email { width: 100%; font-family: var(--sans); font-size: 16px; color: var(--text); background: none;
+#email, #pw { width: 100%; font-family: var(--sans); font-size: 16px; color: var(--text); background: none;
   border: none; border-bottom: 1.5px solid var(--text); padding: 10px 0; min-height: 44px; }
-#email:focus { outline: none; border-bottom-color: var(--accent); }
-#send { width: 100%; margin-top: 16px; min-height: 48px; font-family: var(--mono); font-size: 11px;
+#pw { margin-top: 10px; }
+#email:focus, #pw:focus { outline: none; border-bottom-color: var(--accent); }
+#signin { width: 100%; margin-top: 16px; min-height: 48px; font-family: var(--mono); font-size: 11px;
   letter-spacing: 0.09em; text-transform: uppercase; color: var(--bg); background: var(--text);
   border: none; cursor: pointer; }
-#send:hover { background: var(--accent); }
+#signin:hover { background: var(--accent); }
+#send { width: 100%; margin-top: 12px; min-height: 44px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: none;
+  border: none; cursor: pointer; }
+#send:hover { color: var(--accent); }
 #loginmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); margin-top: 14px; min-height: 16px; }
 [hidden] { display: none !important; }
 </style>
@@ -87,8 +92,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 
 <div id="login" hidden>
   <span class="logo">Mind</span>
-  <input id="email" type="email" placeholder="you@example.com" autocomplete="email" aria-label="Email address">
-  <button id="send">Email me a login link</button>
+  <input id="email" type="email" placeholder="you@example.com" autocomplete="username" aria-label="Email address">
+  <input id="pw" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password">
+  <button id="signin">Sign in</button>
+  <button id="send">Email me a link instead</button>
   <div id="loginmsg"></div>
 </div>
 
@@ -96,6 +103,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   <div class="top">
     <span class="logo">Mind</span>
     <span class="count" id="count"></span>
+    <button id="setpw">Set password</button>
     <button id="out">Sign out</button>
   </div>
   <div class="searchbar">
@@ -165,14 +173,35 @@ async function loadChrome() {
   });
 }
 
+$("signin").onclick = async () => {
+  const email = $("email").value.trim(), password = $("pw").value;
+  if (!email || !password) { $("loginmsg").textContent = "Enter your email and password."; return; }
+  $("loginmsg").textContent = "Signing in…";
+  const { error } = await supa.auth.signInWithPassword({ email, password });
+  if (error) $("loginmsg").textContent = error.message;
+};
+
+// Magic link kept as the recovery route: it only works in Safari (a Home Screen
+// app has its own storage, so the link can't reach it), but it's the way back in
+// if the password is ever forgotten. Free tier allows 2 emails/hour.
 $("send").onclick = async () => {
   const email = $("email").value.trim();
-  if (!email) return;
+  if (!email) { $("loginmsg").textContent = "Enter your email address."; return; }
   $("loginmsg").textContent = "Sending…";
   const { error } = await supa.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split("#")[0] } });
-  $("loginmsg").textContent = error ? error.message : "Check your email for the link.";
+  $("loginmsg").textContent = error ? error.message : "Check your email — open the link in Safari, not the Home Screen app.";
 };
-$("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("send").click(); });
+
+// ponytail: prompt() — a once-per-lifetime action doesn't need its own form
+$("setpw").onclick = async () => {
+  const p = prompt("Choose a password (at least 8 characters). Save it to your keychain — you'll use it to sign in on your phone.");
+  if (!p) return;
+  const { error } = await supa.auth.updateUser({ password: p });
+  alert(error ? error.message : "Password set. Use it with your email to sign in on the Home Screen app.");
+};
+
+$("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pw").focus(); });
+$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("signin").click(); });
 $("out").onclick = async () => { await supa.auth.signOut(); location.reload(); };
 $("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 250); });
 
