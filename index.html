@@ -255,7 +255,7 @@ const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } 
 async function load() {
   const q = $("q").value.trim();
   let sel = supa.from("items")
-    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path,body_text")
+    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path,body_text,body_html")
     .is("deleted_at", null)
     .order("created_at", { ascending: false }).limit(200);
   if (q) sel = sel.textSearch("search", q, { type: "websearch" });
@@ -267,11 +267,18 @@ async function load() {
   $("status").hidden = data.length > 0;
 }
 
+// first image in the body, if any — only trust src from our own bucket
+function bodyThumb(html) {
+  const m = /<img[^>]+src="([^"]+)"/.exec(html || "");
+  return m && m[1].startsWith(SUPA + "/storage/v1/object/public/mind/") ? m[1] : null;
+}
+
 function render(items) {
   $("grid").innerHTML = items.map(i => {
-    const img = i.storage_path
-      ? '<img loading="lazy" alt="" src="' + SUPA + '/storage/v1/object/public/mind/' + esc(i.storage_path) + '">'
-      : "";
+    const thumb = i.storage_path
+      ? SUPA + "/storage/v1/object/public/mind/" + i.storage_path
+      : bodyThumb(i.body_html);
+    const img = thumb ? '<img loading="lazy" alt="" src="' + esc(thumb) + '">' : "";
     const title = i.source_url
       ? '<a href="' + esc(i.source_url) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
       : esc(i.title);
