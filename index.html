@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)">
 <title>Mind</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -256,19 +258,40 @@ const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } 
 
 /* ---------- grid ---------- */
 
+const COLS = "id,created_at,kind,source_url,title,summary,tags,category,storage_path,body_text,body_html";
+
+// keyword search first, semantic fills in below it — meaning-matches for
+// queries whose words don't appear anywhere in the saved text
+async function semantic(q) {
+  try {
+    const { data: s } = await supa.auth.getSession();
+    const r = await fetch(FN, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer " + s.session.access_token },
+      body: JSON.stringify({ embed_query: q }),
+    });
+    if (!r.ok) return [];
+    const { embedding } = await r.json();
+    const { data } = await supa.rpc("match_items",
+      { query_embedding: "[" + embedding.join(",") + "]", match_count: 15 }).select(COLS);
+    return data || [];
+  } catch { return []; }
+}
+
 async function load() {
   const q = $("q").value.trim();
-  let sel = supa.from("items")
-    .select("id,created_at,kind,source_url,title,summary,tags,category,storage_path,body_text,body_html")
+  let sel = supa.from("items").select(COLS)
     .is("deleted_at", null)
     .order("created_at", { ascending: false }).limit(200);
   if (q) sel = sel.textSearch("search", q, { type: "websearch" });
   if (cat) sel = sel.eq("category", cat);
-  const { data, error } = await sel;
+  const [{ data, error }, sem] = await Promise.all([sel, q ? semantic(q) : []]);
   if (error) { $("status").hidden = false; $("status").textContent = "Couldn't load — " + error.message; return; }
-  render(data);
+  const seen = new Set((data || []).map(i => i.id));
+  const merged = (data || []).concat(sem.filter(i => !seen.has(i.id) && (!cat || i.category === cat)));
+  render(merged);
   $("status").textContent = "Nothing found";
-  $("status").hidden = data.length > 0;
+  $("status").hidden = merged.length > 0;
 }
 
 // first image in the body, if any — only trust src from our own bucket
@@ -277,14 +300,16 @@ function bodyThumb(html) {
   return m && m[1].startsWith(SUPA + "/storage/v1/object/public/mind/") ? m[1] : null;
 }
 
+const fileUrl = (p) => SUPA + "/storage/v1/object/public/mind/" + p;
+
 function render(items) {
   $("grid").innerHTML = items.map(i => {
-    const thumb = i.storage_path
-      ? SUPA + "/storage/v1/object/public/mind/" + i.storage_path
-      : bodyThumb(i.body_html);
+    const isPdf = i.storage_path && i.storage_path.endsWith(".pdf");
+    const thumb = i.storage_path && !isPdf ? fileUrl(i.storage_path) : bodyThumb(i.body_html);
     const img = thumb ? '<img loading="lazy" alt="" src="' + esc(thumb) + '">' : "";
-    const title = i.source_url
-      ? '<a href="' + esc(i.source_url) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
+    const href = i.source_url || (isPdf ? fileUrl(i.storage_path) : null);
+    const title = href
+      ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
       : esc(i.title);
     // a note shows what you wrote; a link shows what Claude made of it
     const blurb = i.kind === "note" ? (i.body_text || i.summary) : i.summary;
@@ -336,12 +361,15 @@ async function showDetail(id) {
   const { data, error } = await supa.from("items").select("*").eq("id", id).single();
   if (error || !data) { $("dtitle").textContent = "Not found"; return; }
   current = data;
-  $("dtitle").innerHTML = data.source_url
-    ? '<a href="' + esc(data.source_url) + '" target="_blank" rel="noopener">' + esc(data.title) + "</a>"
+  const dPdf = data.storage_path && data.storage_path.endsWith(".pdf");
+  const dHref = data.source_url || (dPdf ? fileUrl(data.storage_path) : null);
+  $("dtitle").innerHTML = dHref
+    ? '<a href="' + esc(dHref) + '" target="_blank" rel="noopener">' + esc(data.title) + "</a>"
     : esc(data.title);
   $("dmeta").innerHTML = esc(data.category || data.kind) + " · " + when(data.created_at) +
-    (data.source_url ? ' <span class="src">↗ ' + esc(host(data.source_url)) + "</span>" : "");
-  if (data.storage_path) { $("dimg").src = SUPA + "/storage/v1/object/public/mind/" + data.storage_path; $("dimg").hidden = false; }
+    (data.source_url ? ' <span class="src">↗ ' + esc(host(data.source_url)) + "</span>" : "") +
+    (dPdf ? ' <span class="src">↗ PDF</span>' : "");
+  if (data.storage_path && !dPdf) { $("dimg").src = fileUrl(data.storage_path); $("dimg").hidden = false; }
   else $("dimg").hidden = true;
   // a note's own body is the editor's job; only show Claude's summary for things it read
   const showSummary = data.kind !== "note" && data.summary;
