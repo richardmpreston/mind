@@ -25,14 +25,20 @@
   :root { --bg:#0e0e10; --text:#f0f0f2; --body:#a8a8b0; --muted:#8f8f98; --faint:#2a2a2e; --accent:#8f9cff; }
 }
 * { box-sizing: border-box; margin: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5; padding: 28px 20px 64px; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5; padding: 0 20px 64px; }
 .wrap { max-width: 1080px; margin: 0 auto; }
 [hidden] { display: none !important; }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+/* header + search pinned while the grid scrolls; padding clears the iOS
+   status bar in the Home Screen app (inset is 0 in a normal browser) */
+#chrome { position: sticky; top: 0; z-index: 20; background: var(--bg);
+  padding-top: calc(env(safe-area-inset-top) + 10px); padding-bottom: 2px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 .logo { font-family: var(--serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; }
 .right { display: flex; align-items: center; gap: 8px; }
-.count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px; }
+.count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-right: 4px;
+  background: none; border: none; cursor: pointer; min-height: 44px; padding: 0; }
+.count:hover { color: var(--accent); }
 /* floating create button: bottom-right thumb zone, clear of the status-bar
    clutter that swallowed it in the header */
 #new { position: fixed; right: 20px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 15;
@@ -55,11 +61,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   padding: 0 16px; text-align: left; }
 #menu button:hover { color: var(--accent); }
 
-.searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 9px; margin-bottom: 20px; }
-#q { flex: 1; font-family: var(--serif); font-size: 20px; color: var(--text); background: none; border: none; padding: 6px 0; min-height: 38px; }
+.searchbar { display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--text); padding-bottom: 4px; }
+#q { flex: 1; font-family: var(--serif); font-size: 20px; color: var(--text); background: none; border: none; padding: 6px 0; min-height: 38px; -webkit-appearance: none; appearance: none; }
 #q::placeholder { color: var(--muted); opacity: 1; }
 #q:focus { outline: none; }
+#q::-webkit-search-cancel-button { display: none; }
 .searchbar:focus-within { border-bottom-color: var(--accent); }
+#clr { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; margin-right: -12px; }
+#clr:hover { color: var(--accent); }
 
 #pwform { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
   padding-bottom: 20px; border-bottom: 1px solid var(--faint); }
@@ -74,7 +84,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #cancelpw { color: var(--muted); background: none; padding: 0 4px; }
 #pwmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); }
 
-#cats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
+#cats { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0 26px; }
 .cat { font-family: var(--mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
   background: none; border: none; color: var(--muted); cursor: pointer;
   min-height: 44px; padding: 0; border-bottom: 2px solid transparent; }
@@ -101,7 +111,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 40px 0; }
 
 /* detail */
-#detail { max-width: 680px; }
+#detail { max-width: 680px; padding-top: calc(env(safe-area-inset-top) + 10px); }
 #back { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted); background: none; border: none; cursor: pointer; min-height: 44px; padding: 0; margin-bottom: 12px; }
 #back:hover { color: var(--accent); }
@@ -178,27 +188,31 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 </div>
 
 <div id="app" class="wrap" hidden>
-  <div class="top">
-    <span class="logo">Mind</span>
-    <span class="right">
-      <span class="count" id="count"></span>
-      <button id="new" aria-label="New note" title="New note">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-      <span id="acct">
-        <button id="avatar" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span id="initial"></span></button>
-        <span id="menu" role="menu" hidden>
-          <button id="setpw" role="menuitem">Set password</button>
-          <button id="out" role="menuitem">Sign out</button>
-        </span>
-      </span>
-    </span>
-  </div>
-
   <div id="gridview">
-    <div class="searchbar">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
-      <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
+    <div id="chrome">
+      <div class="top">
+        <span class="logo">Mind</span>
+        <span class="right">
+          <button class="count" id="count" title="Show everything"></button>
+          <button id="new" aria-label="New note" title="New note">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <span id="acct">
+            <button id="avatar" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span id="initial"></span></button>
+            <span id="menu" role="menu" hidden>
+              <button id="setpw" role="menuitem">Set password</button>
+              <button id="out" role="menuitem">Sign out</button>
+            </span>
+          </span>
+        </span>
+      </div>
+      <div class="searchbar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.5-4.5"/></svg>
+        <input id="q" type="search" placeholder="Search everything…" autocomplete="off" aria-label="Search">
+        <button id="clr" aria-label="Clear search" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
     </div>
     <form id="pwform" hidden>
       <input id="pwuser" type="email" autocomplete="username" readonly aria-label="Account email">
@@ -541,7 +555,20 @@ $("out").onclick = async () => { await supa.auth.signOut(); location.reload(); }
 
 $("email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pw").focus(); });
 $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("signin").click(); });
-$("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 250); });
+$("q").addEventListener("input", () => {
+  $("clr").hidden = !$("q").value;
+  clearTimeout(t); t = setTimeout(load, 250);
+});
+$("clr").onclick = () => { $("q").value = ""; $("clr").hidden = true; $("q").focus(); load(); };
+
+// "N saved" doubles as show-everything: clears search and category filters
+$("count").onclick = () => {
+  $("q").value = ""; $("clr").hidden = true;
+  cat = null;
+  document.querySelectorAll(".cat").forEach(x => x.classList.remove("on"));
+  window.scrollTo({ top: 0 });
+  load();
+};
 
 supa.auth.onAuthStateChange((_e, session) => {
   const in_ = !!session;
