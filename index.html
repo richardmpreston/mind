@@ -98,6 +98,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .card h2 a { color: var(--text); text-decoration: none; }
 .card h2 a:hover { color: var(--accent); }
 .card p { font-size: 14px; line-height: 1.55; color: var(--body); margin-bottom: 6px; }
+.card p.quote { padding-left: 12px; border-left: 2px solid var(--faint); font-style: italic; }
 .tags { display: flex; flex-wrap: wrap; }
 /* ponytail: 36px targets, over the 24px WCAG AA floor. Full 44px would double
    the height of a 7-tag card for a control you hit far less often than a link. */
@@ -325,13 +326,14 @@ function render(items) {
     const title = href
       ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(i.title) + "</a>"
       : esc(i.title);
-    // a note shows what you wrote; a link shows what Claude made of it
-    const blurb = i.kind === "note" ? (i.body_text || i.summary) : i.summary;
+    // a saved selection speaks for itself — show the quote, not Claude's summary
+    const quoted = /^\s*<blockquote>/.test(i.body_html || "") && i.body_text;
+    const blurb = quoted || (i.kind === "note" ? (i.body_text || i.summary) : i.summary);
     const tags = (i.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
     const src = i.source_url ? ' <span class="src">↗ ' + esc(host(i.source_url)) + "</span>" : "";
     const pen = i.kind !== "note" && i.body_text ? ' <span class="pen">· annotated</span>' : "";
     return '<div class="card" data-id="' + i.id + '">' + img + "<h2>" + title + "</h2>" +
-      (blurb ? "<p>" + esc(blurb.slice(0, 220)) + (blurb.length > 220 ? "…" : "") + "</p>" : "") +
+      (blurb ? '<p' + (quoted ? ' class="quote"' : "") + ">" + esc(blurb.slice(0, 220)) + (blurb.length > 220 ? "…" : "") + "</p>" : "") +
       '<div class="tags">' + tags + '</div>' +
       '<div class="meta">' + when(i.created_at) + src + pen + "</div></div>";
   }).join("");
@@ -385,8 +387,10 @@ async function showDetail(id) {
     (dPdf ? ' <span class="src">↗ PDF</span>' : "");
   if (data.storage_path && !dPdf) { $("dimg").src = fileUrl(data.storage_path); $("dimg").hidden = false; }
   else $("dimg").hidden = true;
-  // a note's own body is the editor's job; only show Claude's summary for things it read
-  const showSummary = data.kind !== "note" && data.summary;
+  // a note's own body — or a saved selection — is the editor's job; only show
+  // Claude's summary for things it read itself
+  const showSummary = data.kind !== "note" && data.summary &&
+    !/^\s*<blockquote>/.test(data.body_html || "");
   $("dsummary").hidden = !showSummary;
   $("dsummary").textContent = data.summary || "";
   $("dtags").innerHTML = (data.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
