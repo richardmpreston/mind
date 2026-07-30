@@ -100,12 +100,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .card p { font-size: 14px; line-height: 1.55; color: var(--body); margin-bottom: 6px; }
 .card p.quote { padding-left: 12px; border-left: 2px solid var(--faint); font-style: italic; }
 .tags { display: flex; flex-wrap: wrap; }
-/* ponytail: 36px targets, over the 24px WCAG AA floor. Full 44px would double
-   the height of a 7-tag card for a control you hit far less often than a link. */
+/* ponytail: 28px targets, over the 24px WCAG AA floor. Full 44px would treble
+   the height of a 7-tag card for a control you hit far less often than a link.
+   The underline, not the gap, is what separates one tag from the next. */
 .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
   background: none; border: none; color: var(--muted); cursor: pointer;
-  min-height: 36px; display: inline-flex; align-items: center; padding: 0 14px 0 0; }
-.tag:hover { color: var(--accent); }
+  min-height: 28px; display: inline-flex; align-items: center; padding: 0; margin-right: 12px;
+  text-decoration: underline; text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
+.tag:hover { color: var(--accent); text-decoration-color: var(--accent); }
 .meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
 .meta .src { color: var(--accent); }
 .pen { color: var(--muted); }
