@@ -84,14 +84,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #cancelpw { color: var(--muted); background: none; padding: 0 4px; }
 #pwmsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); }
 
-#cats { display: flex; gap: 18px; flex-wrap: wrap; margin: 12px 0 26px; }
-.cat { font-family: var(--mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
-  background: none; border: none; color: var(--muted); cursor: pointer;
-  min-height: 44px; padding: 0; border-bottom: 2px solid transparent; }
-.cat:hover { color: var(--text); }
-.cat.on { color: var(--text); border-bottom-color: var(--accent); }
-
-#grid { column-width: 300px; column-gap: 28px; }
+#grid { column-width: 300px; column-gap: 28px; margin-top: 26px; }
 .card { break-inside: avoid; margin: 0 0 30px; cursor: pointer; }
 .card img { width: 100%; height: auto; display: block; margin-bottom: 10px; background: var(--faint); }
 .card h2 { font-family: var(--serif); font-size: 19px; font-weight: 400; line-height: 1.3; margin-bottom: 7px; }
@@ -225,7 +218,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
       <button id="cancelpw" type="button">Cancel</button>
       <span id="pwmsg"></span>
     </form>
-    <div id="cats"></div>
     <div id="grid"></div>
     <div id="status">Loading</div>
   </div>
@@ -354,14 +346,8 @@ async function loadChrome() {
   $("initial").textContent = ((u?.user?.email || "?")[0]).toUpperCase();
   const { count } = await supa.from("items").select("*", { count: "exact", head: true }).is("deleted_at", null);
   $("count").textContent = count === 1 ? "1 saved" : count + " saved";
-  const { data } = await supa.from("items").select("category").is("deleted_at", null).limit(1000);
-  const cats = [...new Set((data || []).map(r => r.category).filter(Boolean))].sort();
-  $("cats").innerHTML = cats.map(c => '<button class="cat" data-c="' + esc(c) + '">' + esc(c) + "</button>").join("");
-  document.querySelectorAll(".cat").forEach(b => b.onclick = () => {
-    cat = cat === b.dataset.c ? null : b.dataset.c;
-    document.querySelectorAll(".cat").forEach(x => x.classList.toggle("on", x.dataset.c === cat));
-    load();
-  });
+  // category pills retired — the categories were too coarse to filter by. The
+  // field is still catalogued and still filters if `cat` is ever set again.
 }
 
 /* ---------- detail ---------- */
