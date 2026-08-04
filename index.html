@@ -103,7 +103,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
 .tag:hover { color: var(--accent); text-decoration-color: var(--accent); }
 .meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
-.meta .src { color: var(--accent); }
+.meta .src { color: var(--accent); text-decoration: none; }
+.meta a.src:hover { text-decoration: underline; }
 .pen { color: var(--muted); }
 #status { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 40px 0; }
 
@@ -114,10 +115,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 #back:hover { color: var(--accent); }
 #dimg { width: 100%; height: auto; display: block; margin-bottom: 16px; background: var(--faint); }
 #dtitle { font-family: var(--serif); font-size: 28px; font-weight: 400; line-height: 1.25; margin-bottom: 8px; }
-#dtitle a { color: var(--text); text-decoration: none; }
-#dtitle a:hover { color: var(--accent); }
 #dmeta { margin-bottom: 18px; }
 #dsummary { font-size: 15px; line-height: 1.6; color: var(--body); margin-bottom: 18px; }
+/* long-press to edit: the callout has to go, or iOS shows Copy/Look Up instead */
+.press { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.press.editing { -webkit-user-select: text; user-select: text; outline: none;
+  box-shadow: -10px 0 0 var(--faint), 4px 0 0 var(--faint); background: var(--faint); }
 #dtags { margin-bottom: 24px; }
 #elabel { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted); padding-top: 20px; border-top: 1px solid var(--faint); margin-bottom: 8px; }
@@ -225,9 +228,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   <div id="detail" hidden>
     <button id="back">← All</button>
     <img id="dimg" alt="" hidden>
-    <h1 id="dtitle"></h1>
+    <h1 id="dtitle" class="press"></h1>
     <div id="dmeta" class="meta"></div>
-    <p id="dsummary"></p>
+    <p id="dsummary" class="press"></p>
     <div id="dtags" class="tags"></div>
     <div id="elabel"></div>
     <div id="toolbar">
@@ -368,12 +371,12 @@ async function showDetail(id) {
   current = data;
   const dPdf = data.storage_path && data.storage_path.endsWith(".pdf");
   const dHref = data.source_url || (dPdf ? fileUrl(data.storage_path) : null);
-  $("dtitle").innerHTML = dHref
-    ? '<a href="' + esc(dHref) + '" target="_blank" rel="noopener">' + esc(data.title) + "</a>"
-    : esc(data.title);
+  // the title is editable now, so the source link lives in the meta line —
+  // a long press on a link gets iOS's own menu, not ours
+  $("dtitle").textContent = data.title;
+  const srcLink = (label) => ' <a class="src" href="' + esc(dHref) + '" target="_blank" rel="noopener">↗ ' + label + "</a>";
   $("dmeta").innerHTML = esc(data.category || data.kind) + " · " + when(data.created_at) +
-    (data.source_url ? ' <span class="src">↗ ' + esc(host(data.source_url)) + "</span>" : "") +
-    (dPdf ? ' <span class="src">↗ PDF</span>' : "");
+    (data.source_url ? srcLink(esc(host(data.source_url))) : dPdf ? srcLink("PDF") : "");
   if (data.storage_path && !dPdf) { $("dimg").src = fileUrl(data.storage_path); $("dimg").hidden = false; }
   else $("dimg").hidden = true;
   // a note's own body — or a saved selection — is the editor's job; only show
@@ -405,6 +408,46 @@ function route() {
 window.addEventListener("hashchange", route);
 
 /* ---------- editing ---------- */
+
+// Long-press the title or summary to correct what Claude wrote. Saves on blur:
+// there's no second button to hunt for, and Enter commits.
+function pressToEdit(el, field) {
+  let timer, from;
+  el.addEventListener("pointerdown", (e) => {
+    if (!current?.id || el.isContentEditable) return;
+    from = [e.clientX, e.clientY];
+    timer = setTimeout(() => {
+      el.contentEditable = "plaintext-only";
+      el.classList.add("editing");
+      el.focus();
+      getSelection().selectAllChildren(el);
+      getSelection().collapseToEnd();
+      navigator.vibrate?.(8);
+    }, 450);
+  });
+  // a scroll that starts on the title is a scroll, not a press
+  el.addEventListener("pointermove", (e) => {
+    if (from && Math.hypot(e.clientX - from[0], e.clientY - from[1]) > 10) clearTimeout(timer);
+  });
+  ["pointerup", "pointercancel"].forEach(t => el.addEventListener(t, () => clearTimeout(timer)));
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); el.blur(); } });
+  el.addEventListener("blur", async () => {
+    el.contentEditable = "false";
+    el.classList.remove("editing");
+    const text = el.innerText.trim();
+    if (!current?.id || text === (current[field] || "") || (field === "title" && !text)) {
+      el.textContent = current?.[field] || "";   // empty title, or no change: put it back
+      return;
+    }
+    $("savemsg").textContent = "Saving…";
+    const { error } = await supa.from("items").update({ [field]: text }).eq("id", current.id);
+    if (error) { $("savemsg").textContent = "Couldn't save — " + error.message; return; }
+    current[field] = text;
+    $("savemsg").textContent = "Saved";
+  });
+}
+pressToEdit($("dtitle"), "title");
+pressToEdit($("dsummary"), "summary");
 
 // tags over inline styles, so the saved markup stays small and sanitisable
 document.execCommand("styleWithCSS", false, false);
