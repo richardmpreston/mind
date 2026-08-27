@@ -227,8 +227,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 
   <div id="detail" hidden>
     <button id="back">← All</button>
-    <img id="dimg" alt="" hidden>
     <h1 id="dtitle" class="press"></h1>
+    <img id="dimg" alt="" hidden>
     <div id="dmeta" class="meta"></div>
     <p id="dsummary" class="press"></p>
     <div id="dtags" class="tags"></div>
@@ -332,8 +332,8 @@ function render(items) {
     const src = href ? ' <a class="src" href="' + esc(href) + '" target="_blank" rel="noopener">↗ ' +
       (i.source_url ? esc(host(i.source_url)) : "PDF") + "</a>" : "";
     const pen = i.kind !== "note" && i.body_text ? ' <span class="pen">· annotated</span>' : "";
-    return '<div class="card" data-id="' + i.id + '">' + img +
-      '<h2 class="press" data-f="title">' + esc(i.title) + "</h2>" +
+    return '<div class="card" data-id="' + i.id + '">' +
+      '<h2 class="press" data-f="title">' + esc(i.title) + "</h2>" + img +
       (blurb ? "<p" + pcls + ">" + esc(blurb.slice(0, 220)) + (blurb.length > 220 ? "…" : "") + "</p>" : "") +
       '<div class="tags">' + tags + '</div>' +
       '<div class="meta">' + when(i.created_at) + src + pen + "</div></div>";
