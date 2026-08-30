@@ -383,6 +383,8 @@ Deno.serve(async (req) => {
         (highlight
           ? `The user highlighted this passage — it is the reason they saved the page. Weight the summary and tags towards it:\n\"${highlight}\"\n`
           : "") +
+        "If the page shows one main item followed by comments, replies, or a feed of other posts, " +
+        "catalogue only the main item and ignore everything after it.\n" +
         `Page content (may be partial or a paywall teaser):\n${page || "(unavailable — catalogue from the URL alone)"}`,
     });
   } else if (body.text) {
