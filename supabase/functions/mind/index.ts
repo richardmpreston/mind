@@ -9,6 +9,9 @@ import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const OWNER = "richardmpreston@me.com";
+// where the browse page lives, so a capture can hand back a link to what it just
+// saved — the Shortcut's finishing popup uses it
+const APP = "https://richardmpreston.github.io/mind/";
 
 const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
@@ -281,7 +284,7 @@ Deno.serve(async (req) => {
       const before = (r.tags ?? []) as string[];
       const canonical = before.map((t) => map.get(t) ?? t);
       const after = [...new Set([...canonical, ...canonical.flatMap((t) => parentOf.get(t) ?? [])])];
-      if (after.join(" ") === before.join(" ")) continue;
+      if (after.join("\u0000") === before.join("\u0000")) continue;
       await supa.from("items").update({ tags: after }).eq("id", r.id);
       changed++;
     }
@@ -426,5 +429,5 @@ Deno.serve(async (req) => {
     .insert({ kind, source_url, raw_text, storage_path, ...fields, ...rich, ...(embedding ? { embedding } : {}) })
     .select("id, title, summary, tags, category").single();
   if (error) return new Response("db error: " + error.message, { status: 500, headers: CORS });
-  return Response.json(data, { status: 201, headers: CORS });
+  return Response.json({ ...data, url: APP + "#" + data.id }, { status: 201, headers: CORS });
 });

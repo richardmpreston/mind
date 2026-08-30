@@ -64,6 +64,11 @@ The four branches are, in order: link, text, PDF, image. Two Shortcuts-editor de
 afternoon to find: the condition code for a string "is" comparison is 4, and for "has any value" it
 is 100.
 
+The endpoint answers a successful capture with the saved row — `id`, `title`, `summary`, `tags`,
+`category` — plus `url`, a ready-made address for the entry on the browse page. The Shortcut's
+finishing popup uses `url` so it can offer to open what was just saved. That link opens in Safari,
+which keeps its own sign-in separate from the Home Screen app.
+
 ### What the function does with a link
 
 1. Starts downloading the page's own headline picture (its `og:image` tag) — in the background.
