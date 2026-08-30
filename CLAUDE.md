@@ -64,6 +64,12 @@ The four branches are, in order: link, text, PDF, image. Two Shortcuts-editor de
 afternoon to find: the condition code for a string "is" comparison is 4, and for "has any value" it
 is 100.
 
+**Each branch has its own POST action, and that is a trap.** A magic variable in Shortcuts is bound
+to one *specific* action, not to "whichever ran". A lookup pointed at the link branch's response is
+simply empty when a photo was shared — and the item still saves, so nothing looks broken except the
+value you wanted. Set a named variable (`saved`) immediately after each of the four POSTs and read
+that instead. Diagnosed 30 Aug 2026, after three rounds of blaming the wrong things.
+
 The endpoint answers a successful capture with the saved row — `id`, `title`, `summary`, `tags`,
 `category` — plus `url`, a ready-made address for the entry on the browse page. The Shortcut's
 finishing popup uses `url` so it can offer to open what was just saved. That link opens in Safari,
