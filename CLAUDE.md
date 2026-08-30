@@ -34,6 +34,36 @@ The function checks the secret, or checks that the token belongs to `richardmpre
 refuses everything else. It runs with the service key, so it can write regardless of the row rules
 below.
 
+### The iOS Shortcut in detail
+
+"Save To Mind". Not in this repo and it cannot be: it is a signed iOS file, and **it carries the
+`MIND_SECRET` inside it — never commit it to this public repo.** The signed copy as delivered is
+`~/Desktop/Save To Mind v3.shortcut` on the iMac (19 Jul 2026, 33 actions). The authoritative
+version is always a fresh iCloud link from Richard; a copy on disk may be out of date.
+
+What is written down here is not how to rebuild it — it is why the endpoint is as defensive as it is.
+Each of these was found the hard way, and the endpoint compensates for all of them:
+
+- **iOS lies about what it is sharing.** The Shortcut base64-encodes an image as PNG whatever the
+  original format, and a PDF can arrive down the image branch. So the endpoint identifies files by
+  their first few bytes rather than by what it was told (`sniff()`), and reroutes a PDF that arrives
+  as an image.
+- **"Get Text from Input" on an image returns the image's display name**, not an error. A screenshot
+  shared from the markup preview carries the picture *and* the text "Image", so the text branch fired
+  with no picture and saved a junk note. Photos-app shares carry no name, which is why photos always
+  worked and screenshots did not. The Shortcut now looks for real attachments first, inside the text
+  branch, and lets them win.
+- **A shared highlight can arrive as a rendered picture of the text**, not as text. The endpoint asks
+  Claude to transcribe any image that is mostly words, and when it gets a transcription back it
+  demotes the item from a picture to a quotation and never uploads the screenshot. Words beat a
+  photograph of words.
+- **A shared highlight never carries the page's address.** Investigated exhaustively and closed twice.
+  Do not reopen it.
+
+The four branches are, in order: link, text, PDF, image. Two Shortcuts-editor details that cost an
+afternoon to find: the condition code for a string "is" comparison is 4, and for "has any value" it
+is 100.
+
 ### What the function does with a link
 
 1. Starts downloading the page's own headline picture (its `og:image` tag) — in the background.
