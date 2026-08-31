@@ -147,9 +147,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   color: var(--bg); background: var(--text); border: none; cursor: pointer; min-height: 44px; padding: 0 20px; }
 #save:hover { background: var(--accent); }
 #savemsg { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; color: var(--muted); flex: 1; }
-#del { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+#del, #unquote { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted); background: none; border: none; cursor: pointer; min-height: 44px; padding: 0; }
-#del:hover { color: var(--accent); }
+#del:hover, #unquote:hover { color: var(--accent); }
 
 #toast { position: fixed; left: 20px; bottom: calc(20px + env(safe-area-inset-bottom));
   z-index: 20; display: flex; align-items: center; gap: 16px; background: var(--text); color: var(--bg);
@@ -242,6 +242,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
          autocapitalize="sentences" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Note body"></div>
     <div class="editrow">
       <button id="save">Save</button>
+      <button id="unquote" hidden>Clear</button>
       <span id="savemsg"></span>
       <button id="del">Delete</button>
     </div>
@@ -367,7 +368,7 @@ async function showDetail(id) {
     current = { id: null, kind: "note" };
     $("dtitle").textContent = "New note";
     $("dimg").hidden = true; $("dsummary").hidden = true; $("dtags").innerHTML = "";
-    $("dmeta").textContent = ""; $("elabel").hidden = true; $("del").hidden = true;
+    $("dmeta").textContent = ""; $("elabel").hidden = true; $("del").hidden = true; $("unquote").hidden = true;
     $("editor").innerHTML = "";
     $("editor").focus();
     return;
@@ -393,6 +394,7 @@ async function showDetail(id) {
   $("dsummary").textContent = data.summary || "";
   $("dtags").innerHTML = (data.tags || []).map(x => '<button class="tag" data-t="' + esc(x) + '">' + esc(x) + "</button>").join("");
   document.querySelectorAll("#dtags .tag").forEach(b => b.onclick = () => { location.hash = ""; $("q").value = b.dataset.t; load(); });
+  $("unquote").hidden = data.kind === "note" || !(data.body_html || data.body_text);
   $("elabel").hidden = data.kind === "note";
   $("elabel").textContent = "Your notes";
   $("del").hidden = false;
@@ -520,6 +522,26 @@ $("save").onclick = async () => {
     const row = await r.json();
     location.hash = row.id;   // reopens it, now carrying Claude's title and tags
   }
+};
+
+// A shared page often arrives with a slab of its own text attached — the notes
+// below a Substack post, say. One tap to drop it, undoable like a delete.
+$("unquote").onclick = async () => {
+  const id = current?.id;
+  if (!id) return;
+  const was = { body_html: current.body_html ?? null, body_text: current.body_text ?? null };
+  const restore = async () => {
+    await supa.from("items").update(was).eq("id", id);
+    Object.assign(current, was);
+    $("editor").innerHTML = clean(was.body_html || "");
+    $("unquote").hidden = false;
+  };
+  const { error } = await supa.from("items").update({ body_html: null, body_text: null }).eq("id", id);
+  if (error) { $("savemsg").textContent = "Couldn't clear — " + error.message; return; }
+  Object.assign(current, { body_html: null, body_text: null });
+  $("editor").innerHTML = "";
+  $("unquote").hidden = true;
+  toast("Cleared", restore);
 };
 
 $("del").onclick = async () => {
