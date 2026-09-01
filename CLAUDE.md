@@ -203,7 +203,8 @@ There is no test framework and there should not be one. The pattern that has wor
 ## Where it stands
 
 41 items live, 25 soft-deleted. Every live item has a meaning vector. 27 links predate headline
-pictures and could be backfilled by re-fetching their `og:image` — offered, not yet done.
+pictures. **Ruled on 1 Sep 2026: they are not to be backfilled** — they stay as they are.
+Do not offer it again.
 
 Deliberately not built: re-running Claude on every edit (tags would shift under you and each save
 would cost a call), a native app, and any second way to save things. One capture path is worth more
