@@ -244,7 +244,15 @@ Deno.serve(async (req) => {
     harmonise?: boolean; dry?: boolean;
     plan?: { merges: { to: string; from: string[]; why: string }[];
              parents: { parent: string; children: string[]; why: string }[] } };
-  try { body = await req.json(); } catch { return new Response("bad json", { status: 400, headers: CORS }); }
+  try { body = await req.json(); } catch (e) {
+    console.error("bad json:", e, "| content-length:", req.headers.get("content-length"));
+    return new Response("bad json", { status: 400, headers: CORS });
+  }
+  // what arrived, without the payloads themselves — enough to tell which branch
+  // of the Shortcut fired and whether it carried anything
+  console.log("keys:", Object.keys(body).map((k) =>
+    k + "=" + (typeof body[k as keyof typeof body] === "string"
+      ? (body[k as keyof typeof body] as string).length + "ch" : body[k as keyof typeof body])).join(" "));
 
   // --- semantic search: turn a query into a vector for the browse page ---
   if (body.embed_query) {
@@ -344,7 +352,7 @@ Deno.serve(async (req) => {
   if (body.pdf_base64) {
     kind = "pdf";
     const bytes = decode64(body.pdf_base64);
-    if (!bytes) return new Response("bad base64", { status: 400, headers: CORS });
+    if (!bytes) { console.error("bad base64, length:", (body.pdf_base64 ?? body.image_base64 ?? "").length); return new Response("bad base64", { status: 400, headers: CORS }); }
     if (bytes.length > 20 * 1024 * 1024) return new Response("pdf too large (20MB max)", { status: 413, headers: CORS });
     storage_path = await store(bytes, "application/pdf");
     raw_text = body.text ?? null;
@@ -355,7 +363,7 @@ Deno.serve(async (req) => {
   } else if (body.image_base64) {
     kind = "image";
     const bytes = decode64(body.image_base64);
-    if (!bytes) return new Response("bad base64", { status: 400, headers: CORS });
+    if (!bytes) { console.error("bad base64, length:", (body.pdf_base64 ?? body.image_base64 ?? "").length); return new Response("bad base64", { status: 400, headers: CORS }); }
     imgBytes = bytes;
     imgMt = sniff(bytes) ?? body.media_type ?? "image/jpeg";
     raw_text = body.text ?? null;
@@ -397,6 +405,7 @@ Deno.serve(async (req) => {
       : { body_html: "<blockquote>" + textToHtml(body.text) + "</blockquote>", body_text: body.text };
     content.push({ type: "text", text: "Catalogue this note:\n" + body.text });
   } else {
+    console.error("nothing to save — keys were:", Object.keys(body).join(","));
     return new Response("nothing to save", { status: 400, headers: CORS });
   }
 
