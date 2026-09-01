@@ -41,6 +41,14 @@ below.
 `~/Desktop/Save To Mind v3.shortcut` on the iMac (19 Jul 2026, 33 actions). The authoritative
 version is always a fresh iCloud link from Richard; a copy on disk may be out of date.
 
+**A shortcut CAN be read, via its iCloud link.** `https://www.icloud.com/shortcuts/api/records/<id>`
+returns a record carrying two assets: `signedShortcut` (an Apple Encrypted Archive, opaque) and
+`shortcut` — the **unsigned binary plist**, which `plistlib` reads directly. That gives the full action
+list, every parameter, and which action each variable points at. To hand a fixed one back:
+patch the plist, save it with a `.shortcut` extension, then
+`shortcuts sign --mode anyone --input x.shortcut --output y.shortcut`.
+Never commit either file — the plist contains `MIND_SECRET` in a request header.
+
 What is written down here is not how to rebuild it — it is why the endpoint is as defensive as it is.
 Each of these was found the hard way, and the endpoint compensates for all of them:
 
@@ -59,6 +67,11 @@ Each of these was found the hard way, and the endpoint compensates for all of th
   photograph of words.
 - **A shared highlight never carries the page's address.** Investigated exhaustively and closed twice.
   Do not reopen it.
+- **Two Resize Image actions, only one with a width.** The photo-library path resized with a blank
+  Width field, which yields nothing, so the encoder produced an empty string and the endpoint answered
+  "nothing to save" — as plain text, which then broke the dictionary lookup three actions later. Photos
+  had been failing this way since the v3 restructure on 19 Jul 2026; screenshots kept working because
+  they take the other path. Found 1 Sep 2026 by reading the plist, after guessing wrongly twice.
 
 The four branches are, in order: link, text, PDF, image. Two Shortcuts-editor details that cost an
 afternoon to find: the condition code for a string "is" comparison is 4, and for "has any value" it
