@@ -38,7 +38,7 @@ below.
 
 "Save To Mind". Not in this repo and it cannot be: it is a signed iOS file, and **it carries the
 `MIND_SECRET` inside it — never commit it to this public repo.** The signed copy as delivered is
-`~/Desktop/Save To Mind v3.shortcut` on the iMac (19 Jul 2026, 33 actions). The authoritative
+`~/Desktop/Save To Mind v4.shortcut` on the iMac (1 Sep 2026, 45 actions; v3 was 19 Jul, 33 actions). The authoritative
 version is always a fresh iCloud link from Richard; a copy on disk may be out of date.
 
 **A shortcut CAN be read, via its iCloud link.** `https://www.icloud.com/shortcuts/api/records/<id>`
@@ -67,11 +67,17 @@ Each of these was found the hard way, and the endpoint compensates for all of th
   photograph of words.
 - **A shared highlight never carries the page's address.** Investigated exhaustively and closed twice.
   Do not reopen it.
-- **Two Resize Image actions, only one with a width.** The photo-library path resized with a blank
-  Width field, which yields nothing, so the encoder produced an empty string and the endpoint answered
-  "nothing to save" — as plain text, which then broke the dictionary lookup three actions later. Photos
-  had been failing this way since the v3 restructure on 19 Jul 2026; screenshots kept working because
-  they take the other path. Found 1 Sep 2026 by reading the plist, after guessing wrongly twice.
+- **Shortcuts' image actions cannot handle WebP.** Resize Image returns *nothing* for a `.webp` —
+  no error — so Base64 Encode yields an empty string and the endpoint answers "nothing to save" in
+  plain text, which then breaks the dictionary lookup at the end of the Shortcut. The symptom names
+  none of this: you get "couldn't convert from Text to Dictionary" and no saved item. v4 (1 Sep 2026)
+  puts a **Convert Image → JPEG** ahead of both resizes. WebP arrives whenever a picture is saved from
+  a web page, so this is common, not exotic.
+  Two wrong diagnoses preceded it — the variable binding, then a missing Width on one resize (640 is
+  simply Shortcuts' default when the plist stores no width; it was never the problem). What settled it:
+  `shortcuts run "Save To Mind" --input-path <file>` on the Mac, first with a PNG (110418 characters
+  posted, saved fine) then with a WebP (0 characters, the user's exact error). **Reproduce before
+  theorising** — the endpoint logs the length of every field it receives.
 
 The four branches are, in order: link, text, PDF, image. Two Shortcuts-editor details that cost an
 afternoon to find: the condition code for a string "is" comparison is 4, and for "has any value" it
